@@ -1,0 +1,20 @@
+.layout {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+  /* Must give a "real" starter height (i.e. can't do 100%, the min-height will ensure a minimum full page layout) */
+  height: 10px; 
+}
+.main {
+  flex: 1 0 1px;
+}
+
+.footer {
+  height: 5em;
+  flex: 0 0 auto;
+}
+
+.header {
+  flex: 0 0 auto;
+}
