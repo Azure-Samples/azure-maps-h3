@@ -1,0 +1,39 @@
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 10px;
+  background-color: white;
+
+  &__section {
+    display: flex;
+    align-items: center;
+  }
+
+  .header__item {
+    padding: 5px 15px;
+    font-size: 12px;
+
+    & + & {
+      @extend .header__item;
+      margin-left: 5px;
+    }
+
+    &--selected {
+      @extend .header__item;
+      background-color: lightgray;
+      border-radius: 4px;
+    }
+  }
+
+  .headerLogo {
+    font-size: 20px;
+    line-height: 0;
+    color: white;
+  }
+
+  .headerButton {
+    cursor: pointer;
+    color: #d9e9ef;
+  }
+}

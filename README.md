@@ -1,57 +1,39 @@
-# Project Name
+## Azure Maps H3 sample
 
-(short, 1-3 sentenced, description of the project)
+Define the variable `NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY` using one of the methods below:
 
-## Features
+- Run `export NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY="<your-key>"` in your shell
+- Add a file named `.env.local` with the contents:
+  ```
+  NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY="<your-key>"
+  ```
 
-This project framework provides the following features:
+To run the development server:
 
-* Feature 1
-* Feature 2
-* ...
+```bash
+yarn dev
+```
 
-## Getting Started
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the
+result.
 
-### Prerequisites
+You can start editing the page by modifying `pages/index.tsx`. The page
+auto-updates as you edit the file.
 
-(ideally very short, if any)
+## Static Export
 
-- OS
-- Library version
-- ...
+This site supports SSR (excluding the actual map will still be rendered but only
+at browser time). To generate a static build run:
 
-### Installation
+```bash
+yarn export # this will generate a static build under `./out`
+```
 
-(ideally very short)
+You can then use your favorite local server to serve the `./out` directory:
 
-- npm install [package name]
-- mvn install
-- ...
-
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [respository name]
-3. ...
-
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
-
-## Resources
-
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
+```sh
+# Using https://github.com/vercel/serve
+yarn global add serve
+serve out
+# The static build will be served from http://localhost:5000 by default
+```

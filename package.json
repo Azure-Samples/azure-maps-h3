@@ -1,0 +1,49 @@
+{
+  "name": "azure-maps-h3",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "export": "next build && next export",
+    "test": "jest --coverage --coverageReporters=cobertura --coverageReporters=html"
+  },
+  "dependencies": {
+    "azure-maps-control": "^2.0.27",
+    "next": "9.4.4",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "sass": "^1.26.10"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.7",
+    "@types/jest": "^26.0.14",
+    "@types/node": "^14.0.22",
+    "@types/react": "^16.9.43",
+    "@typescript-eslint/eslint-plugin": "^3.6.0",
+    "@typescript-eslint/parser": "^3.6.0",
+    "eslint": "^7.4.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-react": "^7.20.3",
+    "eslint-plugin-react-hooks": "^4.0.7",
+    "husky": ">=4",
+    "jest": "^26.5.2",
+    "jest-canvas-mock": "^2.3.0",
+    "jest-fetch-mock": "^3.0.3",
+    "jest-watch-typeahead": "^0.6.1",
+    "lint-staged": ">=10",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.4.1",
+    "typescript": "^3.9.6"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": "eslint --cache --fix",
+    "*.{js,jsx,ts,tsx,json,css,md}": "prettier --write"
+  }
+}
