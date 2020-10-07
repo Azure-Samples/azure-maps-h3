@@ -12,7 +12,7 @@
     "export": "next build && next export",
     "lint": "eslint '**/*.ts{,x}'",
     "lint-fix": "eslint --fix '**/*.ts{,x}'",
-    "test": "jest --coverage --coverageReporters=cobertura --coverageReporters=html"
+    "test": "jest --passWithNoTests --coverage --coverageReporters=cobertura --coverageReporters=html"
   },
   "dependencies": {
     "azure-maps-control": "^2.0.27",
