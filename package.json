@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "export": "next build && next export",
+    "lint": "eslint '**/*.ts{,x}'",
+    "lint-fix": "eslint --fix '**/*.ts{,x}'",
     "test": "jest --coverage --coverageReporters=cobertura --coverageReporters=html"
   },
   "dependencies": {
