@@ -33,7 +33,7 @@ const Home: FunctionComponent<HomeProps> = (props) => {
  *
  * @param context
  */
-export const getStaticProps: GetStaticProps<HomeProps> = async (context) => {
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
   const readJSONFileFromDisk = async (filepath: string): Promise<any> => {
     return await fs.readFile(filepath, "utf-8").then(JSON.parse);
   };

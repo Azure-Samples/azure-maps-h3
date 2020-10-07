@@ -14,4 +14,9 @@ module.exports = {
     "react/prop-types": [0],
     "@typescript-eslint/no-explicit-any": "off",
   },
+  settings: {
+    react: {
+      version: "detect",
+    },
+  },
 };
