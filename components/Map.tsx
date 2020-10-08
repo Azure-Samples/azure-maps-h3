@@ -13,6 +13,7 @@ import type * as GeoJSON from "geojson";
 import React, { FunctionComponent, useEffect, useRef, useState } from "react";
 import { exposeMapbox, MapWithMapbox } from "../lib/azure-maps/mapbox";
 import styles from "./Map.module.scss";
+import type * as Mapbox from "mapbox-gl";
 
 export interface MapProps {
   atlas: typeof atlasTypes;
@@ -96,6 +97,30 @@ function renderDataSource(
   map.layers.add(pointLayer);
 }
 
+/**
+ * Applies custom styling to default fonts on Azure Map
+ * @param map Mapbox.map instance
+ */
+const customMapStyles = (map?: InstanceType<typeof Mapbox.Map>) => {
+  const layers = map?.getStyle()?.layers;
+  if (!layers) {
+    return;
+  }
+  for (let i = 0; i < layers?.length; i++) {
+    //Don't modify text color with any layer that has "icon" in the ID.
+    if (
+      layers[i].type === "symbol" &&
+      layers[i].id.indexOf("icon") === -1 &&
+      layers[i].source === "vectorTiles"
+    ) {
+      // Customize default Azure Maps font style
+      // Make the text color dark grey and remove white outline (set it to transparent).
+      map?.setPaintProperty(layers[i].id, "text-color", "#444444");
+      map?.setPaintProperty(layers[i].id, "text-halo-color", "transparent");
+    }
+  }
+};
+
 //------------------------------------------------------------------------------
 // Components
 
@@ -113,7 +138,7 @@ const Map: FunctionComponent<MapProps> = ({
     if (!map) {
       const newMap = new atlas.Map(mapRef.current as HTMLElement, {
         view: "Auto",
-        style: "grayscale_dark",
+        style: "grayscale_light",
         minZoom: 4,
         // Add your Azure Maps key to the map SDK. Get an Azure Maps key at
         // https://azure.com/maps. NOTE: The primary key should be used as the
@@ -161,6 +186,10 @@ const Map: FunctionComponent<MapProps> = ({
 
   const [dataSource, setDataSource] = useState<atlasTypes.source.DataSource>();
   useEffect(() => {
+    const applyStyles = () => {
+      customMapStyles(map?.map);
+    };
+
     const loadData = () => {
       const ds = new atlas.source.DataSource();
       map?.sources.add(ds);
@@ -180,12 +209,17 @@ const Map: FunctionComponent<MapProps> = ({
       map?.sources.remove(dataSource);
       setDataSource(undefined);
     }
+    // Apply the style when the map is ready.
+    applyStyles();
+
+    // When the map style changes, apply the customized style.
+    map?.events.add("styledata", applyStyles);
+
     map?.events.remove("ready", loadData);
 
     // Re-add the ready event
     map?.events.add("ready", loadData);
   }, [dataSource, map, atlas, geoJSON]);
-  // map?.layers.add(new atlas.layer.)
 
   return <div ref={mapRef} className={styles.map} />;
 };
