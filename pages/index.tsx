@@ -1,15 +1,15 @@
-import Head from "next/head";
-import { NextMap } from "../components/Map";
-import React, { FunctionComponent } from "react";
-import type GeoJSON from "geojson";
-import { GetStaticProps } from "next";
 import * as fs from "fs/promises";
+import type GeoJSON from "geojson";
+import { GetStaticProps, NextPage } from "next";
+import Head from "next/head";
+import React from "react";
+import { NextMap } from "../components/Map";
 
 interface HomeProps {
   geoJSON: GeoJSON.GeoJSON[];
 }
 
-const Home: FunctionComponent<HomeProps> = (props) => {
+const Home: NextPage<HomeProps> = (props) => {
   return (
     <>
       <Head>

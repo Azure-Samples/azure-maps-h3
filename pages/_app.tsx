@@ -9,13 +9,13 @@
  * @see https://nextjs.org/docs/advanced-features/custom-app
  */
 ////////////////////////////////////////////////////////////////////////////////
+import "azure-maps-control/dist/atlas.css";
 import { AppProps } from "next/app";
-import React from "react";
 import Head from "next/head";
-import styles from "./_app.module.scss";
+import React from "react";
 import { Header } from "../components/Header";
 import "./styles.scss";
-import "azure-maps-control/dist/atlas.css";
+import styles from "./_app.module.scss";
 
 const MyApp = ({ Component, pageProps }: AppProps): JSX.Element => {
   return (

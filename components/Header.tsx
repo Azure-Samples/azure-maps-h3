@@ -1,7 +1,7 @@
-import React, { FunctionComponent } from "react";
-import styles from "./Header.module.scss";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import React, { FunctionComponent } from "react";
+import styles from "./Header.module.scss";
 
 interface Page {
   title: string | JSX.Element;

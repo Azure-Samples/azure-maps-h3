@@ -1,4 +1,3 @@
-////////////////////////////////////////////////////////////////////////////////
 /**
  * Map
  *
@@ -10,16 +9,19 @@
  */
 ////////////////////////////////////////////////////////////////////////////////
 import type * as atlasTypes from "azure-maps-control";
-import React from "react";
-import { FunctionComponent, useRef, useEffect, useState } from "react";
-import styles from "./Map.module.scss";
 import type * as GeoJSON from "geojson";
+import React, { FunctionComponent, useEffect, useRef, useState } from "react";
+import { exposeMapbox, MapWithMapbox } from "../lib/azure-maps/mapbox";
+import styles from "./Map.module.scss";
 
 export interface MapProps {
   atlas: typeof atlasTypes;
   azureMapsSubscriptionKey: string;
   geoJSON?: GeoJSON.GeoJSON[];
 }
+
+//------------------------------------------------------------------------------
+// Helpers
 
 /**
  * Renders the given data source onto the map.
@@ -34,7 +36,7 @@ export interface MapProps {
  */
 function renderDataSource(
   atlas: typeof atlasTypes,
-  map: atlasTypes.Map,
+  map: atlasTypes.Map | MapWithMapbox,
   dataSource: atlasTypes.source.DataSource
 ): void {
   //Add a layer for rendering the polygons.
@@ -94,12 +96,17 @@ function renderDataSource(
   map.layers.add(pointLayer);
 }
 
+//------------------------------------------------------------------------------
+// Components
+
 const Map: FunctionComponent<MapProps> = ({
   atlas,
   azureMapsSubscriptionKey,
   geoJSON,
 }) => {
-  const [map, setMap] = useState<atlasTypes.Map>();
+  // Azure maps must be initialized imperatively after didMount, so you must
+  // store the instance in state.
+  const [map, setMap] = useState<MapWithMapbox>();
   const mapRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     // Initialize the map
@@ -108,13 +115,19 @@ const Map: FunctionComponent<MapProps> = ({
         view: "Auto",
         style: "grayscale_dark",
         minZoom: 4,
-        //Add your Azure Maps key to the map SDK. Get an Azure Maps key at https://azure.com/maps. NOTE: The primary key should be used as the key.
+        // Add your Azure Maps key to the map SDK. Get an Azure Maps key at
+        // https://azure.com/maps. NOTE: The primary key should be used as the
+        // key.
         authOptions: {
           authType: "subscriptionKey",
           subscriptionKey: azureMapsSubscriptionKey,
         } as atlasTypes.AuthenticationOptions,
       });
-      setMap(newMap);
+      // Raise the type of the azure maps instance to include the hidden mapbox
+      // instance with the `exposeMapbox` helper.
+      exposeMapbox(newMap).then((mapWithMapbox) => {
+        setMap(mapWithMapbox);
+      });
     }
   }, [map, azureMapsSubscriptionKey, atlas.Map]);
 
