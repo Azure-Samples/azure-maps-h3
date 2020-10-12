@@ -27,6 +27,9 @@ const Home: NextPage<HomeProps> = (props) => {
   );
 };
 
+/**
+ * Gets H3 JSON data from the public folder after compacting it
+ */
 const getH3Data = async (): Promise<HexagonData[]> => {
   // First, we need to convert our lat long json file to H3!
   const jsonLatLongFile = await fs
@@ -37,12 +40,8 @@ const getH3Data = async (): Promise<HexagonData[]> => {
     .then(JSON.parse);
 
   const h3: HexagonData[] = [];
-  for (let i = 0; i < jsonLatLongFile.length; i++) {
-    const h3Index = geoToH3(
-      jsonLatLongFile[i].fields.latitude,
-      jsonLatLongFile[i].fields.longitude,
-      5
-    );
+  for (const hex of jsonLatLongFile) {
+    const h3Index = geoToH3(hex.fields.latitude, hex.fields.longitude, 5);
     h3.push({
       // Generate a random number between 1 and 10, for our purposes
       // Round to two decimal place
@@ -53,11 +52,11 @@ const getH3Data = async (): Promise<HexagonData[]> => {
 
   // We can compact the data to make it more efficient
   const meanToH3Ids: { [id: number]: HexagonData[] } = {};
-  for (let i = 0; i < h3.length; i++) {
-    if (!(h3[i].mean in meanToH3Ids)) {
-      meanToH3Ids[h3[i].mean] = [];
+  for (const hex of h3) {
+    if (!(hex.mean in meanToH3Ids)) {
+      meanToH3Ids[hex.mean] = [];
     }
-    meanToH3Ids[h3[i].mean].push(h3[i]);
+    meanToH3Ids[hex.mean].push(hex);
   }
   const compactedData: HexagonData[] = [];
 
