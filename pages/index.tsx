@@ -1,12 +1,13 @@
 import * as fs from "fs/promises";
-import type GeoJSON from "geojson";
 import { GetStaticProps, NextPage } from "next";
 import Head from "next/head";
 import React from "react";
 import { NextMap } from "../components/Map";
+import { geoToH3, compact } from "h3-js";
+import { HexagonData } from "../lib/types";
 
 interface HomeProps {
-  geoJSON: GeoJSON.GeoJSON[];
+  h3: HexagonData[];
 }
 
 const Home: NextPage<HomeProps> = (props) => {
@@ -20,10 +21,75 @@ const Home: NextPage<HomeProps> = (props) => {
         azureMapsSubscriptionKey={
           process.env.NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY ?? ""
         }
-        geoJSON={props.geoJSON}
+        h3={props.h3}
       />
     </>
   );
+};
+
+const getH3Data = async (): Promise<HexagonData[]> => {
+  // First, we need to convert our lat long json file to H3!
+  const jsonLatLongFile = await fs
+    .readFile(
+      `${process.cwd()}/public/geojson/us-zip-code-latitude-and-longitude.json`,
+      "utf-8"
+    )
+    .then(JSON.parse);
+
+  const h3: HexagonData[] = [];
+  for (let i = 0; i < jsonLatLongFile.length; i++) {
+    const h3Index = geoToH3(
+      jsonLatLongFile[i].fields.latitude,
+      jsonLatLongFile[i].fields.longitude,
+      5
+    );
+    h3.push({
+      // Generate a random number between 1 and 10, for our purposes
+      // Round to two decimal place
+      mean: Math.round((Math.random() * (10 - 1) + 1) * 100) / 100,
+      hexIds: [h3Index],
+    });
+  }
+
+  // We can compact the data to make it more efficient
+  const meanToH3Ids: { [id: number]: HexagonData[] } = {};
+  for (let i = 0; i < h3.length; i++) {
+    if (!(h3[i].mean in meanToH3Ids)) {
+      meanToH3Ids[h3[i].mean] = [];
+    }
+    meanToH3Ids[h3[i].mean].push(h3[i]);
+  }
+  const compactedData: HexagonData[] = [];
+
+  // Now, we loop over the array for each mean value
+  for (const mean in meanToH3Ids) {
+    const uniqueArray = new Set(
+      meanToH3Ids[mean].map((entry) => entry.hexIds?.[0])
+    );
+    const compacted = compact(Array.from(uniqueArray));
+    compactedData.push({
+      mean: Number(mean as string),
+      hexIds: compacted,
+    });
+  }
+
+  // Write the converted H3 data to public/ folder
+  await fs.writeFile(
+    `${process.cwd()}/public/geojson/us-zip-code.json`,
+    JSON.stringify({ value: compactedData }, null, 4),
+    "utf-8"
+  );
+
+  // Read from that file
+  // You could skip the above steps and just read from this file in production, but the code is
+  // included here as a sample
+  const h3Data = await fs
+    .readFile(`${process.cwd()}/public/geojson/us-zip-code.json`, "utf-8")
+    .then((data) => {
+      return JSON.parse(data).value;
+    });
+
+  return h3Data;
 };
 
 /**
@@ -34,21 +100,9 @@ const Home: NextPage<HomeProps> = (props) => {
  * @param context
  */
 export const getStaticProps: GetStaticProps<HomeProps> = async () => {
-  const readJSONFileFromDisk = async (filepath: string): Promise<any> => {
-    return await fs.readFile(filepath, "utf-8").then(JSON.parse);
-  };
-
-  const geoJSONFilenames = ["california.json"];
-  const geoJSONFilePromises = geoJSONFilenames
-    .map((filename) => `${process.cwd()}/public/geojson/${filename}`)
-    .map(readJSONFileFromDisk);
-  const geoJSONFiles: GeoJSON.GeoJSON[] = await Promise.all(
-    geoJSONFilePromises
-  );
-
   return {
     props: {
-      geoJSON: geoJSONFiles,
+      h3: await getH3Data(),
     },
   };
 };
