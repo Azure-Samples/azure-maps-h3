@@ -9,93 +9,22 @@
  */
 ////////////////////////////////////////////////////////////////////////////////
 import type * as atlasTypes from "azure-maps-control";
-import type * as GeoJSON from "geojson";
 import React, { FunctionComponent, useEffect, useRef, useState } from "react";
 import { exposeMapbox, MapWithMapbox } from "../lib/azure-maps/mapbox";
 import styles from "./Map.module.scss";
 import type * as Mapbox from "mapbox-gl";
+import { HexagonData } from "../lib/types";
+import { MapboxLayer } from "@deck.gl/mapbox";
+import { H3ClusterLayer } from "deck.gl";
 
 export interface MapProps {
   atlas: typeof atlasTypes;
   azureMapsSubscriptionKey: string;
-  geoJSON?: GeoJSON.GeoJSON[];
+  h3: HexagonData[];
 }
 
 //------------------------------------------------------------------------------
 // Helpers
-
-/**
- * Renders the given data source onto the map.
- * Adds the layers:
- * - [Line](https://docs.microsoft.com/en-us/azure/azure-maps/map-add-line-layer)
- * - [Polygon](https://docs.microsoft.com/en-us/azure/azure-maps/map-add-shape)
- * - [Symbol](https://docs.microsoft.com/en-us/azure/azure-maps/map-add-pin)
- *
- * @param atlas used to generate the needed layers
- * @param map to render the layers onto
- * @param dataSource containing the data to render
- */
-function renderDataSource(
-  atlas: typeof atlasTypes,
-  map: atlasTypes.Map | MapWithMapbox,
-  dataSource: atlasTypes.source.DataSource
-): void {
-  //Add a layer for rendering the polygons.
-  const polygonLayer = new atlas.layer.PolygonLayer(dataSource, undefined, {
-    fillColor: "#1e90ff",
-    filter: [
-      "any",
-      ["==", ["geometry-type"], "Polygon"],
-      ["==", ["geometry-type"], "MultiPolygon"],
-    ], //Only render Polygon or MultiPolygon in this layer.
-  });
-
-  //Add a layer for rendering line data.
-  const lineLayer = new atlas.layer.LineLayer(dataSource, undefined, {
-    strokeColor: "#1e90ff",
-    strokeWidth: 4,
-    filter: [
-      "any",
-      ["==", ["geometry-type"], "LineString"],
-      ["==", ["geometry-type"], "MultiLineString"],
-    ], //Only render LineString or MultiLineString in this layer.
-  });
-
-  //Add a layer for rendering point data.
-  const pointLayer = new atlas.layer.SymbolLayer(dataSource, undefined, {
-    iconOptions: {
-      allowOverlap: true,
-      ignorePlacement: true,
-    },
-    filter: [
-      "any",
-      ["==", ["geometry-type"], "Point"],
-      ["==", ["geometry-type"], "MultiPoint"],
-    ], //Only render Point or MultiPoints in this layer.
-  });
-
-  map.layers.add(
-    [
-      polygonLayer,
-
-      //Add a layer for rendering the outline of polygons.
-      new atlas.layer.LineLayer(dataSource, undefined, {
-        strokeColor: "black",
-        filter: [
-          "any",
-          ["==", ["geometry-type"], "Polygon"],
-          ["==", ["geometry-type"], "MultiPolygon"],
-        ], //Only render Polygon or MultiPolygon in this layer.
-      }),
-
-      lineLayer,
-      pointLayer,
-    ],
-    "labels"
-  );
-
-  map.layers.add(pointLayer);
-}
 
 /**
  * Applies custom styling to default fonts on Azure Map
@@ -121,13 +50,59 @@ const customMapStyles = (map?: InstanceType<typeof Mapbox.Map>) => {
   }
 };
 
+/**
+ * Generate a heatmap color based on the provided `value`.
+ *
+ * Based on the value corresponding to the `min` and `max`, the function will
+ * generate a color ranging from light teal [214,227,230] to dark teal [50,120,133].
+ *
+ * @throws {Error} when the value is smaller than `min` or larger than `max`
+ *
+ * @param value to generate the RGBA from
+ */
+export const generateColors = (
+  value: number
+): [number, number, number, number] => {
+  // Datasets are fixed to be in range [1, 10], throw error if not.
+  const min = 1;
+  const max = 10;
+  if (value < min || value > max) {
+    throw Error(
+      `provided value is not within provided min/max range; value of ${value} is either smaller than min ${min} or larger than max ${max}`
+    );
+  }
+  const denominator = max - min;
+  const quotient = (value - min) / denominator;
+  const alpha = 150;
+
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (quotient >= 0 && quotient <= 1) {
+    const darkColor = { red: 50, green: 120, blue: 133 };
+    const lightColor = { red: 214, green: 227, blue: 230 };
+
+    red = (darkColor.red - lightColor.red) * quotient + lightColor.red;
+    green = (darkColor.green - lightColor.green) * quotient + lightColor.green;
+    blue = (darkColor.blue - lightColor.blue) * quotient + lightColor.blue;
+  } else {
+    throw Error(
+      `unexpected error ocurred calculated color value for values ${JSON.stringify(
+        { value, min, max }
+      )}`
+    );
+  }
+  return [red, green, blue, alpha];
+};
+
 //------------------------------------------------------------------------------
 // Components
 
 const Map: FunctionComponent<MapProps> = ({
   atlas,
   azureMapsSubscriptionKey,
-  geoJSON,
+  h3,
 }) => {
   // Azure maps must be initialized imperatively after didMount, so you must
   // store the instance in state.
@@ -191,16 +166,32 @@ const Map: FunctionComponent<MapProps> = ({
     };
 
     const loadData = () => {
-      const ds = new atlas.source.DataSource();
-      map?.sources.add(ds);
-      if (geoJSON) {
-        for (const file of geoJSON) {
-          // Dangerous! Azure Maps built in geojson types conflict with @types/geojson
-          ds.add(file as any);
+      if (h3) {
+        const h3Layer = new MapboxLayer({
+          id: "h3-cluster-layer",
+          type: H3ClusterLayer,
+          data: h3,
+          pickable: true,
+          stroked: false,
+          filled: true,
+          extruded: false,
+          getHexagons: (d: HexagonData) => {
+            return d.hexIds;
+          },
+          getFillColor: (d: HexagonData) => {
+            return generateColors(d.mean);
+          },
+          getLineColor: [255, 255, 255, 100],
+          lineWidthMinPixels: 2,
+        });
+
+        const mapLayer = map?.map?.getLayer("h3-cluster-layer");
+        if (typeof mapLayer !== "undefined") {
+          // Remove map layer
+          map?.map?.removeLayer("h3-cluster-layer");
         }
-        if (map) {
-          renderDataSource(atlas, map, ds);
-        }
+
+        map?.map?.addLayer(h3Layer, "Town water body");
       }
     };
 
@@ -219,7 +210,7 @@ const Map: FunctionComponent<MapProps> = ({
 
     // Re-add the ready event
     map?.events.add("ready", loadData);
-  }, [dataSource, map, atlas, geoJSON]);
+  }, [dataSource, map, atlas, h3]);
 
   return <div ref={mapRef} className={styles.map} />;
 };

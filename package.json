@@ -16,10 +16,12 @@
   },
   "dependencies": {
     "azure-maps-control": "^2.0.27",
+    "h3-js": "^3.6.4",
     "next": "9.4.4",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "sass": "^1.26.10"
+    "sass": "^1.26.10",
+    "deck.gl": "^8.2.2"
   },
   "devDependencies": {
     "@types/geojson": "^7946.0.7",
