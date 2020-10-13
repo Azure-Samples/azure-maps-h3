@@ -44,4 +44,6 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: yarn deploy
+        env:
+          NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY: ${{ secrets.NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY }}
         run: yarn deploy
