@@ -2,6 +2,8 @@
 
 This sample for Azure Maps creates layers using the underlying Mapbox layer in Azure Maps. The default styling of Azure Maps fonts is also customized in this sample.
 
+Demo: [azure-samples.github.io/azure-maps-h3/](https://azure-samples.github.io/azure-maps-h3/)
+
 ## Getting started
 
 Define the variable `NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY` using one of the methods below:
