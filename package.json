@@ -15,7 +15,7 @@
     "lint-fix": "eslint --fix '**/*.ts{,x}'",
     "test": "jest --passWithNoTests --coverage --coverageReporters=cobertura --coverageReporters=html",
     "predeploy": "next build && next export",
-    "deploy": "gh-pages -d out"
+    "deploy": "gh-pages -d out -t true"
   },
   "dependencies": {
     "azure-maps-control": "^2.0.27",
