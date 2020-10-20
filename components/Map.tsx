@@ -152,7 +152,7 @@ const Map: FunctionComponent<MapProps> = ({
       const longLat = [longitude, latitude];
       map?.setCamera({
         center: longLat,
-        zoom: 12,
+        zoom: 8,
       });
       const marker = new atlas.HtmlMarker({ position: longLat });
       map?.markers.add(marker);

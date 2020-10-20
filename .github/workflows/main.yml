@@ -38,12 +38,27 @@ jobs:
         run: yarn test
 
   deploy:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
-    # Steps represent a sequence of tasks that will be executed as part of the job
+
     steps:
-      - name: yarn deploy
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2-beta
+        with:
+          node-version: "14"
+
+      - name: yarn
+        run: yarn
+
+      - name: yarn export
+        run: yarn export
         env:
           NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY: ${{ secrets.NEXT_PUBLIC_AZURE_MAP_SUBSCRIPTION_KEY }}
-        run: yarn deploy
+
+      - name: deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          ACCESS_TOKEN: ${{ secrets.TOKEN }}
+          BRANCH: gh-pages
+          FOLDER: out
+          CLEAN: true
